@@ -19,6 +19,18 @@ Named after Samus (your friend) and Manus (Latin for "hand").
 - **Conversational**: Maintains context across multiple steps
 - **Safety**: Press `Ctrl+C` or move mouse to corner to abort
 
+## Install
+
+Windows (PowerShell)
+- Optional: `py -m venv .venv; .\.venv\Scripts\Activate.ps1`
+- `pip install -r requirements.txt`
+- Run a quick demo: `powershell -ExecutionPolicy Bypass -File .\demo_60s.ps1`
+
+macOS/Linux
+- `python3 -m venv .venv && source .venv/bin/activate`
+- `pip install -r requirements.txt`
+- Replace Notepad/MSPaint steps with your platform equivalents.
+
 ## Setup
 
 1. **Install Python dependencies:**
