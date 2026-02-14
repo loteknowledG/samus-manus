@@ -4,58 +4,73 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 Project summary
 Species: Amanu — agents with hands and eyes.
-Samus‑Manus is a small, script‑first desktop automation agent. It captures a screenshot, asks a vision model what to do, parses a JSON action list, executes those actions with pyautogui, and loops until "done" or user abort.
+Samus‑Manus is a small, script‑first desktop automation toolkit centered on pyautogui. It runs entirely locally: move/click/drag, type/keys/hotkeys, and take screenshots. Optional offline voice control (Vosk + pyttsx3).
+
+Role of this file: concise summary and map of docs/capabilities.
+- First-time setup: bootup.md
+- Session context: MEMORY.md
+- Journal of milestones/artifacts: RECORDS.md
+
+For new agents: start here
+1) Install base (hands/eyes)
+   powershell> pip install -r requirements.txt
+2) Sanity check (save a screenshot)
+   powershell> python .\hands.py screenshot --out .\screen.png
+3) Optional voice (offline)
+   powershell> pip install vosk sounddevice pyttsx3 numpy
+   powershell> python .\voice_loop.py
 
 Common commands (PowerShell)
 - Install deps
   - pip install -r requirements.txt
-- Run (OpenAI version)
-  - Create .env with OPENAI_API_KEY=...
-  - python samus_manus.py
-  - When prompted, enter a task, e.g. "Open Notepad and type hello".
-- Run (Gemini version)
-  - Create .env with GOOGLE_API_KEY=...
-  - python samus_manus_gemini.py
-  - Uses model id gemini-2.0-flash.
+- Hands CLI quickstart
+  - python hands.py move --x 800 --y 450 --dur 0.2
+  - python hands.py click --x 800 --y 450
+  - python hands.py screenshot --out .\\screen.png
+- Voice control (optional, offline)
+  - pip install vosk sounddevice pyttsx3 numpy
+  - python voice_loop.py
+  - First run auto-downloads the Vosk English model (~50MB) into models/ (gitignored). Prompt: "Voice control ready. Press Enter to talk."
+- Fast voice (persistent TTS)
+  - Start server once: `python tools/tts_say.py --ensure "Fast voice online"`
+  - Speak: `./say.ps1 "Hello"` (or `python tools/tts_say.py -- "Hello"`)
+- 60-second demo
+  - powershell -ExecutionPolicy Bypass -File .\\demo_60s.ps1
+- Warp jump (voice + before/after + minimize + log)
+  - .\\warp_jump.ps1 -What both -Label demo -App mspaint
 - Single test / utility
-  - python test_screenshot.py  # saves screenshot_YYYYMMDD_HHMMSS.png and prints screen size & mouse position
+  - python test_screenshot.py
 - Build / Lint / Test framework
   - No build step; scripts run directly with Python.
   - No linter or test framework is configured in-repo.
 
-High‑level architecture
+Capabilities at a glance
 - Entry points
-  - samus_manus.py (OpenAI) and samus_manus_gemini.py (Gemini). They implement the same control loop with different SDKs.
-- Control loop (both versions)
-  1) capture_screenshot(): grab full-screen PNG (PIL via pyautogui)
-  2) Prompting: a system prompt defines the action grammar the model must return
-  3) Message: current screenshot + task text sent to the model
-  4) Parsing: parse_actions(...) extracts a JSON array from the model message (prefers fenced code blocks, falls back to regex scanning)
-  5) Execution: execute_action(...) maps each item to pyautogui primitives (click, double_click, type, press, hotkey, scroll, move, wait, done)
-  6) Loop: stop when an action returns "DONE" or max_steps is reached; Ctrl+C interrupts; moving the mouse to a corner triggers pyautogui.FAILSAFE
-- SDK differences
-  - OpenAI version: OpenAI.chat.completions (model "gpt-4o"); keeps conversation_history including screenshots between steps
-  - Gemini version: genai.GenerativeModel('gemini-2.0-flash') with a stateful chat; screenshots passed as bytes
+  - hands.py — stateless CLI for direct mouse/keyboard/screenshot control
+  - voice_loop.py — offline voice control using Vosk STT + pyttsx3 TTS (no API; auto-downloads ~50MB model on first run)
+- Core primitives (pyautogui)
+  - moveTo/click/doubleClick/dragTo · write/press/hotkey · scroll/screenshot
+- Optional image targeting
+  - hands.py find-click can use opencv-python for confidence matching if installed
 
 Extension points (where to change things)
-- Adding a new action: implement a new case in execute_action(...) and add its JSON shape to the system prompt so the model can call it
-- Cost control (OpenAI path): cap conversation_history to the most recent 1–2 steps or summarize prior state before sending
+- Adding a new action: implement a new case in execute_action(...) and reflect it in CLI/voice prompts
 - Shared logic: execute_action(...) and parse_actions(...) are duplicated; consider extracting to a shared module (e.g., actions.py)
 - Robust text entry: for non‑ASCII text, prefer clipboard paste (pyperclip + ctrl+v) instead of pyautogui.write
 
 Operational notes
 - Read MEMORY.md at repo root on start for persistent context/next‑steps.
-- Environment: python‑dotenv loads .env automatically; if a key is missing, the script prints a clear error and exits
-- Safety: pyautogui.FAILSAFE=True (slam cursor to a corner to abort). The main loop also catches KeyboardInterrupt
-- Coordinates: the model must return absolute screen coordinates; consider providing screen size to the prompt if accuracy is an issue (pyautogui.size())
+- Safety: pyautogui.FAILSAFE=True (move cursor to a corner to abort). Ctrl+C interrupts any script
+- Coordinates: commands use absolute screen coordinates; use hands.py screenshot to verify alignment
 
-Known quirks
-- samus_manus.py parse_actions catches json.JSONDecodeException (typo); should be json.JSONDecodeError
-- Regex fallback in parse_actions may pick up stray JSON‑looking text; prefer returning a fenced JSON array from the model
 
-Minimal repo map
-- README.md — user‑facing setup/usage; action list; safety notes
-- samus_manus.py — OpenAI loop
-- samus_manus_gemini.py — Gemini loop (model id: gemini-2.0-flash)
-- requirements.txt — pyautogui, pillow, google‑generativeai, python‑dotenv
+Documentation map
+- bootup.md — first-time install and quick run steps (hands + optional voice)
+- README.md — usage overview (Hands CLI, demo, how it works)
+- manifest.md — capabilities summary (pyautogui: hands/eyes)
+- [soul.md](soul.md) — nuanced preferences (voice, screenshots, co‑driving etiquette)
+- MEMORY.md — session scratchpad to carry state between runs
+- RECORDS.md — running journal of milestones/artifacts
+- .gitignore — includes models/ to keep Vosk downloads untracked
+- tools/ — small helper scripts (e.g., draw_cat.py)
 - test_screenshot.py — ad‑hoc utility; not a formal test suite
