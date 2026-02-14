@@ -21,9 +21,10 @@ This is the minimal landing page for Samus‑Manus (species: Amanu).
 
 ## First Handshake
 
-![First Handshake](assets/friends_colored_stamped.png)
+_(Image removed)_
 
 ## Try it locally (Windows / PowerShell)
+
 ```powershell
 pip install -r requirements.txt
 python .\hands.py screenshot --out .\hands_demo.png
