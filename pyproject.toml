@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "samus-manus"
+version = "0.1"
+description = "Local desktop automation agent — pyautogui (mouse/keyboard), Pillow (screenshots), optional offline voice."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [ { name = "loteknowledG" } ]
+keywords = ["automation", "pyautogui", "desktop-automation", "voice", "agent"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Software Development :: Automation"
+]
+
+dependencies = [
+  "pyautogui",
+  "pillow"
+]
+
+[project.optional-dependencies]
+voice = [
+  "vosk",
+  "sounddevice",
+  "pyttsx3",
+  "numpy"
+]
+
+[project.scripts]
+hands = "hands:main"
