@@ -1,0 +1,9 @@
+# DEPRECATED — merged into main `requirements.txt`.
+# Original samus_manus_mvp requirements (kept for reference):
+openai
+python-dotenv
+pyttsx3
+requests
+vosk
+sounddevice
+pyautogui

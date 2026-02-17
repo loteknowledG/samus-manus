@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Hands: screenshot",
+			"type": "shell",
+			"command": "python .\\hands.py screenshot --out .\\boot_check.png",
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Run: Hands screenshot (temp)",
+			"type": "shell",
+			"command": "python .\\hands.py screenshot --out .\\boot_check.png",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Boot: bootup.ps1",
+			"type": "shell",
+			"command": "powershell -ExecutionPolicy Bypass -File .\\bootup.ps1 -All",
+			"presentation": { "reveal": "always", "panel": "shared" },
+			"problemMatcher": [],
+			"group": { "kind": "build", "isDefault": true }
+		}
+	]
+}

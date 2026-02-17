@@ -1,0 +1,12 @@
+{
+  "tasks": [
+    {
+      "id": "task-1",
+      "task": "Take a screenshot",
+      "status": "done",
+      "created_at": 1708180000,
+      "result": "Error running task: Command '['python', 'C:\\dev\\nowon\\samus_manus_mvp\\samus_agent.py', 'run', 'Take a screenshot', '--no-approve']' timed out after 120 seconds",
+      "completed_at": 1771350221.140554
+    }
+  ]
+}

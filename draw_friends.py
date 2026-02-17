@@ -90,3 +90,22 @@ p.mouseUp()
 out = r"C:\dev\samus-manus\friends_paint.png"
 p.screenshot(out)
 print(out)
+
+# Try to return focus to VS Code for the user
+try:
+    import pygetwindow as gw
+    # common window titles: 'Visual Studio Code' or include 'Code'
+    wins = gw.getWindowsWithTitle('Visual Studio Code') or gw.getWindowsWithTitle('Code')
+    if wins:
+        w = wins[0]
+        try:
+            w.activate()
+        except Exception:
+            pass
+except Exception:
+    # Fallback: attempt to open the current folder with the `code` command (may bring focus)
+    try:
+        import subprocess, os
+        subprocess.Popen(["cmd", "/c", "start", "code", os.getcwd()], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass

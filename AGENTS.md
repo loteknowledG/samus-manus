@@ -3,8 +3,7 @@
 This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
 Project summary
-Species: Amanu — agents with hands and eyes.
-Samus‑Manus is a small, script‑first desktop automation toolkit centered on pyautogui. It runs entirely locally: move/click/drag, type/keys/hotkeys, and take screenshots. Optional offline voice control (Vosk + pyttsx3).
+Samus‑Manus is a small, script‑first desktop automation toolkit centered on pyautogui. It runs entirely locally: move/click/drag, type/keys/hotkeys, and take screenshots. Voice control (Vosk + pyttsx3).
 
 Role of this file: concise summary and map of docs/capabilities.
 - First-time setup: bootup.md
@@ -21,8 +20,12 @@ For new agents: start here
    powershell> python .\voice_loop.py
 
 Common commands (PowerShell)
-- Install deps
-  - pip install -r requirements.txt
+- Install & package
+  - `pip install .`                — standard install (exposes `hands` CLI)
+  - `pip install .[voice]`        — optional voice extras (Vosk/pyttsx3)
+  - `pip install -e .`             — editable / developer install
+  - `pipx install .`               — recommended isolated CLI install
+  - `pip install -r requirements.txt`  — quick dependency install
 - Hands CLI quickstart
   - python hands.py move --x 800 --y 450 --dur 0.2
   - python hands.py click --x 800 --y 450

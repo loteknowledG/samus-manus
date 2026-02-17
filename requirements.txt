@@ -1,4 +1,8 @@
 pyautogui
 pillow
-google-generativeai
+openai
 python-dotenv
+pyttsx3
+requests
+vosk
+sounddevice

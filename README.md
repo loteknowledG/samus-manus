@@ -17,7 +17,7 @@ Key points
 - Agent defaults and behavior are defined in `soul.md` and `AGENTS.md` (read those first). 📜
 
 Quick start
-- Read `AGENTS.md` → follow `bootup.md` to install and run the demo.
+- Install (quick): `pip install -r requirements.txt` — see `bootup.md` for the full installer process, demo, and optional voice setup.
 - Try `python hands.py screenshot --out screen.png` or `powershell -ExecutionPolicy Bypass -File .\demo_60s.ps1`.
 
 Quick links
@@ -28,3 +28,9 @@ Safety
 - pyautogui FAILSAFE is enabled: move the mouse to a screen corner to abort.
 
 For more details (usage examples, CLI, demos), see the original docs in the repository.
+
+---
+
+Merged content: files from the workspace `nowon/samus_manus_mvp` have been copied here for consolidation.  
+Added files (copy only) include: `samus_agent.py`, `memory.py`, `memory_cli.py`, `voice_assistant.py`, `heartbeat.py`, `tasks.json`, `startup_restore.py`, `eyes.py`, `draw_smiley.py`, plus `README.samus_manus_mvp.md` and `requirements.samus_manus_mvp.txt`.  
+Conflicting files were kept as suffixed copies (e.g. `hands.nowon.py`, `voice_loop.nowon.py`) so you can review/merge changes manually.
