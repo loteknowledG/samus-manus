@@ -50,7 +50,7 @@ pip install vosk sounddevice pyttsx3 numpy
 ```
 Run:
 ```powershell
-python .\voice_loop.py
+python .\voice_loop.py               # starts voice loop (use --no-prompt to silence the "Speak now." prompt)
 ```
 
 Microphone test (quick):
@@ -59,6 +59,7 @@ Microphone test (quick):
 ```powershell
 python tools\mic_test.py            # records 4s and prints transcript
 python tools\mic_test.py --speak    # also speaks the transcript via local TTS
+python tools\mic_test.py --no-prompt # don't audibly say "Speak now." before recording
 python tools\mic_test.py -s 6       # record 6 seconds
 ```
 
@@ -66,6 +67,8 @@ python tools\mic_test.py -s 6       # record 6 seconds
 
 Notes:
 - First run downloads the Vosk English model (~50MB) into `models/` (gitignored). Local copy present at `models/vosk-model-small-en-us-0.15/`.
+- Disable the audible "Speak now." prompt with `--no-prompt` (supported by `tools/mic_test.py` and `voice_loop.py`).
+- The persistent TTS server (`tools/tts_server.py`) now logs playback and supports a blocking acknowledgement — use `python tools/tts_say.py --wait "text"` to block until audio finishes. `tools/tts_say.py --ensure` will start the server in a foreground-capable mode and write logs to `tools/tts_server.log` so playback is more reliable and easier to debug.
 - Press Enter to talk in `voice_loop.py`; try: "move to center", "click", "double click", "type hello", "quit"
 
 Safety:

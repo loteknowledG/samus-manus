@@ -48,8 +48,21 @@ except Exception:
     pyttsx3 = None
 
 
-def record_block(seconds: int):
-    print(f"🎙️  Recording {seconds}s — please speak now...")
+def record_block(seconds: int, do_prompt: bool = True):
+    prompt = "Speak now."
+    if do_prompt:
+        print(f"🎙️  Recording {seconds}s — {prompt}")
+        # Audibly prompt the user before recording (pyttsx3 optional)
+        if pyttsx3:
+            try:
+                engine = pyttsx3.init()
+                engine.say(prompt)
+                engine.runAndWait()
+            except Exception:
+                # Fall back to the printed prompt if TTS fails
+                pass
+    else:
+        print(f"🎙️  Recording {seconds}s — (no audible prompt)")
     audio = sd.rec(int(seconds * SAMPLE_RATE), samplerate=SAMPLE_RATE, channels=1, dtype='float32')
     sd.wait()
     pcm = (audio.flatten() * 32767).astype(np.int16).tobytes()
@@ -70,10 +83,11 @@ def main():
     ap = argparse.ArgumentParser(description='Microphone test + Vosk transcription')
     ap.add_argument('--seconds', '-s', type=int, default=4, help='Seconds to record (default 4)')
     ap.add_argument('--speak', action='store_true', help='Also speak the transcript via pyttsx3')
+    ap.add_argument('--no-prompt', action='store_true', help='Disable the audible "Speak now." prompt before recording')
     args = ap.parse_args()
 
     model_path = ensure_model()
-    pcm = record_block(args.seconds)
+    pcm = record_block(args.seconds, do_prompt=not args.no_prompt)
     text = transcribe_pcm(model_path, pcm)
 
     if text:

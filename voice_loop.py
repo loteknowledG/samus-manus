@@ -1,4 +1,5 @@
 import os, sys, time, json, zipfile, urllib.request
+import argparse
 import numpy as np
 import sounddevice as sd
 import pyttsx3
@@ -87,6 +88,10 @@ def maybe_act(text: str, tts_engine):
 
 
 def main():
+    ap = argparse.ArgumentParser(description='Voice loop (Vosk + pyttsx3)')
+    ap.add_argument('--no-prompt', action='store_true', help='Disable the audible "Speak now." prompt before recording')
+    args = ap.parse_args()
+
     # TTS engine
     tts = pyttsx3.init()
     tts.setProperty('rate', 180)
@@ -103,6 +108,9 @@ def main():
         except KeyboardInterrupt:
             print("\nExiting")
             break
+        # Audible prompt (can be disabled with --no-prompt)
+        if not args.no_prompt:
+            speak(tts, "Speak now.")
         pcm = record_block()
         text = transcribe(rec, pcm)
         print(f"📝 {text}")

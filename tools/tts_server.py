@@ -35,10 +35,35 @@ class TTSServer:
                 if v is not None:
                     try: self.engine.setProperty('voice', v)
                     except Exception: pass
+
+                # Log playback start
+                try:
+                    print(f"[TTS] play: {text}", flush=True)
+                except Exception:
+                    pass
+
                 self.engine.say(text)
                 self.engine.runAndWait()
-            except Exception:
+
+                # Signal caller (if provided) that playback finished
+                evt = item.get('__event__')
+                if evt is not None:
+                    try:
+                        evt.set()
+                    except Exception:
+                        pass
+
+                # Log playback completion
+                try:
+                    print(f"[TTS] done: {text}", flush=True)
+                except Exception:
+                    pass
+            except Exception as e:
                 # swallow errors so the thread stays alive
+                try:
+                    print(f"[TTS] error: {e}", flush=True)
+                except Exception:
+                    pass
                 pass
 
     def enqueue(self, payload: dict):
@@ -79,8 +104,23 @@ async def serve():
                 if not text:
                     await ws.send(json.dumps({'ok': False, 'error': 'no text'}))
                     continue
+
+                # If caller wants to wait until playback finishes, create an Event
+                wait_flag = bool(data.get('wait'))
+                if wait_flag:
+                    import threading
+                    evt = threading.Event()
+                    data['__event__'] = evt
+
                 tts.enqueue(data)
-                await ws.send(json.dumps({'ok': True}))
+
+                if wait_flag:
+                    # block this handler until the worker sets the event
+                    loop = asyncio.get_running_loop()
+                    await loop.run_in_executor(None, evt.wait)
+                    await ws.send(json.dumps({'ok': True, 'played': True}))
+                else:
+                    await ws.send(json.dumps({'ok': True}))
             except Exception as e:
                 await ws.send(json.dumps({'ok': False, 'error': str(e)}))
 
