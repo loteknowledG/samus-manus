@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """Locate the orange "Send Verification Email" button on screen and click it.
 Saves a before/after screenshot and reports simple red/orange-region checks.
+
+Alternative: run `tools/puppeteer_send_verification.js` (Node + Puppeteer) to click
+the verification button inside a real browser. Example:
+  npm install puppeteer
+  node tools/puppeteer_send_verification.js "<claim_url>" --headful
+
+The Puppeteer script saves `puppeteer_verify_before.png` and
+`puppeteer_verify_after.png` and can be used when pixel-based targeting
+is unreliable or when you need browser DOM access.
 """
 from PIL import Image
 import pygetwindow as gw

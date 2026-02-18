@@ -16,16 +16,23 @@ import argparse
 import requests
 from pathlib import Path
 
+get_memory = None
 try:
     from samus_manus_mvp.memory import get_memory
 except Exception:
-    from memory import get_memory
+    try:
+        from memory import get_memory
+    except Exception:
+        get_memory = None
 
 API_BASE = 'https://www.moltbook.com/api/v1'
 CRED_PATH = Path.home() / '.config' / 'moltbook' / 'credentials.json'
 
 
 def read_persona_and_goal():
+    # If memory API isn't available, return no persona/goal (caller can continue)
+    if get_memory is None:
+        return None, None
     m = get_memory()
     rows = m.all(200)
     persona = None

@@ -26,6 +26,24 @@ try:
 except Exception:
     pyautogui = None
 
+# optional Playwright web_hands helper (tools/web_hands.py)
+try:
+    from tools.web_hands import WebHands
+except Exception:
+    try:
+        # when running the script from inside samus_manus_mvp the repo root
+        # may not be on sys.path — add parent directory and retry import.
+        import sys, os
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        if repo_root not in sys.path:
+            sys.path.insert(0, repo_root)
+        from tools.web_hands import WebHands
+    except Exception:
+        WebHands = None
+
+# simple global sessions for WebHands instances (keyed by session name)
+WEB_HANDS_SESSIONS = {}
+
 # optional persistent memory (if present)
 try:
     from memory import get_memory
@@ -69,13 +87,29 @@ def fallback_plan(task: str) -> list[dict]:
     """Very small deterministic planner used when no LLM is available."""
     actions = []
     # simple heuristics
-    if "screenshot" in task.lower():
+    ltask = task.lower()
+    if "screenshot" in ltask:
         actions.append({"type": "wait", "seconds": 0.5})
         actions.append({"type": "screenshot", "out": "samus_screenshot.png"})
-    if "open" in task.lower() and "notepad" in task.lower():
+    if "open" in ltask and "notepad" in ltask:
         actions.append({"type": "press", "key": "win"})
         actions.append({"type": "type", "text": "notepad"})
         actions.append({"type": "press", "key": "enter"})
+
+    # simple web plan for tasks like "Open example.com and click 'More information...'"
+    if "open" in ltask and ("http" in ltask or "example.com" in ltask or ("open " in ltask and "." in ltask)):
+        m = re.search(r'open\s+(\S+)', task, re.IGNORECASE)
+        url = m.group(1) if m else task
+        if not url.startswith('http'):
+            url = 'https://' + url
+        actions.append({"type": "web_open", "url": url, "session": "demo"})
+        actions.append({"type": "wait", "seconds": 0.5})
+        mclick = re.search(r'click\s+[\'\"]([^\'\"]+)[\'\"]', task, re.IGNORECASE)
+        if mclick:
+            actions.append({"type": "web_click_text", "text": mclick.group(1), "session": "demo"})
+            actions.append({"type": "wait", "seconds": 0.3})
+        actions.append({"type": "web_screenshot", "out": "webhands.png", "session": "demo"})
+
     if not actions:
         actions.append({"type": "type", "text": task})
     actions.append({"type": "done"})
@@ -105,7 +139,9 @@ def plan_with_openai(task: str) -> list[dict]:
     prompt += (
         "You are a safe local agent planner. Break the user's task into a short JSON array "
         "of low‑level actions. Allowed actions: click, double_click, find_click, type, press, hotkey, "
-        "screenshot (out), wait (seconds), done. Return ONLY a JSON array.\nTask: "
+        "screenshot (out), wait (seconds), web_open (url, session), web_click_text (text, session), "
+        "web_click (selector, session), web_fill (selector, value, session), web_screenshot (out, session), web_close (session), done. "
+        "Return ONLY a JSON array.\nTask: "
         + task
     )
     try:
@@ -193,6 +229,87 @@ def execute_action(action: dict, apply: bool) -> str:
             return f"found and clicked {img} at ({x},{y})"
         return f"(sim) found {img} at ({x},{y})"
 
+    # --- Playwright / web_hands integration ---
+    if t == "web_open":
+        if WebHands is None:
+            return "web_hands not available"
+        session = action.get("session", "default")
+        headful = bool(action.get("headful", False))
+        try:
+            wh = WebHands(headful=headful)
+            WEB_HANDS_SESSIONS[session] = wh
+            wh.goto(action.get("url", "about:blank"))
+            return f"web_open -> {action.get('url')}"
+        except Exception as e:
+            return f"web_open failed: {e}"
+
+    if t == "web_click_text":
+        if WebHands is None:
+            return "web_hands not available"
+        session = action.get("session", "default")
+        wh = WEB_HANDS_SESSIONS.get(session)
+        if not wh:
+            return "web_click_text: no active web session"
+        text = action.get("text", "")
+        success = wh.click_text(text, timeout=action.get("timeout", 5000))
+        return f"(web) clicked? {success}"
+
+    if t == "web_click":
+        if WebHands is None:
+            return "web_hands not available"
+        session = action.get("session", "default")
+        wh = WEB_HANDS_SESSIONS.get(session)
+        if not wh:
+            return "web_click: no active web session"
+        selector = action.get("selector", "")
+        try:
+            wh.click(selector, timeout=action.get("timeout", 5000))
+            return f"(web) clicked selector {selector}"
+        except Exception as e:
+            return f"(web) click failed: {e}"
+
+    if t == "web_fill":
+        if WebHands is None:
+            return "web_hands not available"
+        session = action.get("session", "default")
+        wh = WEB_HANDS_SESSIONS.get(session)
+        if not wh:
+            return "web_fill: no active web session"
+        selector = action.get("selector", "")
+        value = action.get("value", "")
+        try:
+            wh.fill(selector, value)
+            return f"(web) filled {selector}"
+        except Exception as e:
+            return f"(web) fill failed: {e}"
+
+    if t == "web_screenshot":
+        if WebHands is None:
+            return "web_hands not available"
+        session = action.get("session", "default")
+        wh = WEB_HANDS_SESSIONS.get(session)
+        if not wh:
+            return "web_screenshot: no active web session"
+        out = action.get("out", "webhands.png")
+        try:
+            wh.screenshot(path=out)
+            return f"web screenshot saved {out}"
+        except Exception as e:
+            return f"(web) screenshot failed: {e}"
+
+    if t == "web_close":
+        if WebHands is None:
+            return "web_hands not available"
+        session = action.get("session", "default")
+        wh = WEB_HANDS_SESSIONS.pop(session, None)
+        if not wh:
+            return "web_close: no active web session"
+        try:
+            wh.close()
+            return f"web session {session} closed"
+        except Exception as e:
+            return f"(web) close failed: {e}"
+
     if t == "type":
         txt = action.get("text", "")
         if apply and pyautogui:
@@ -215,6 +332,16 @@ def execute_action(action: dict, apply: bool) -> str:
         return f"(sim) hotkey: {keys}"
 
     if t == "done":
+        # close any active WebHands sessions
+        try:
+            for s, wh in list(WEB_HANDS_SESSIONS.items()):
+                try:
+                    wh.close()
+                except Exception:
+                    pass
+                WEB_HANDS_SESSIONS.pop(s, None)
+        except Exception:
+            pass
         return "DONE"
 
     return f"Unknown action type: {t}"
