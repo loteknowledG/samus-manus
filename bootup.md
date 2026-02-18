@@ -18,6 +18,9 @@ Quick, repeatable steps to get Samus‑Manus (voice + heartbeat + memory + hands
    - python samus_manus_mvp/samus_agent.py run "Take a screenshot"
 3. Local heartbeat (announces tasks):
    - python samus_manus_mvp/heartbeat.py --once --announce
+4. Chrome DevTools quick check — useful for Prompt API / built‑in AI testing:
+   - start chrome --auto-open-devtools-for-tabs https://developer.chrome.com/docs/ai/prompt-api
+   - in DevTools Console run `await LanguageModel.availability()` to confirm model availability (shows: "unavailable" | "downloadable" | "downloading" | "available")
 
 ## Enable live voice (STT + TTS) 🎤
 - Optional offline STT: Vosk model (small):
@@ -26,7 +29,23 @@ Quick, repeatable steps to get Samus‑Manus (voice + heartbeat + memory + hands
 - Run voice assistant (interactive):
   - python samus_manus_mvp/voice_assistant.py --live
 
-Notes: if Vosk not available, voice assistant falls back to typed input.
+Windows: install a Norwegian TTS voice (recommended)
+- Why: installing a native Norwegian system voice (e.g. **Hedda**, nb-NO) makes Hanna sound authentic and works offline.
+- GUI steps (Windows 10/11):
+  1. Open Settings → Time & language → Speech (or Settings → Accessibility → Speech).
+  2. Click **Manage voices** (or **Add voices**).
+  3. Click **Add a voice**, search for **Norwegian** or **Hedda (Norwegian Bokmål, nb‑NO)** and install the voice.
+  4. Restart any running TTS apps (or sign out/in) so the new voice appears to programs.
+- Quick verification & test:
+  - List installed voices: `python samus_manus_mvp/voice_loop.py --list-voices` (look for `Hedda` or `nb-NO`).
+  - Test Hanna (Norwegian):
+    - `python samus_manus_mvp/voice_loop.py --voice Hedda "Hei — jeg heter Hanna, 26 år, fra Bergen. Si ifra hvis du trenger noe."`
+    - or use the Hanna preset (will prefer Hedda if installed):
+      `python samus_manus_mvp/voice_loop.py --hanna "Hei — jeg heter Hanna..."`
+- PowerShell check (optional):
+  - `Get-ChildItem HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens` — installed SAPI voice tokens.
+
+Notes: if Vosk not available, voice assistant falls back to typed input. If a native Norwegian voice is not available on your Windows build, use the Microsoft language‑packs UI above or consider a cloud TTS with Norwegian voices (Edge TTS / Azure).
 
 ## Persistent memory (advanced, optional)
 - The persistent memory + embeddings feature is an optional, advanced capability and has been moved to the end of this file. See the **Optional — Persistent memory** section for setup, installation, and `OPENAI_API_KEY` details.
@@ -39,6 +58,23 @@ Notes: if Vosk not available, voice assistant falls back to typed input.
 - Safe execution: actions are simulated by default. Use `--apply` to actually run GUI actions.
   - Example: python samus_manus_mvp/samus_agent.py run "Open Notepad and type hello" --apply
 - Safety: `pyautogui.FAILSAFE` is enabled — move mouse to a corner to abort.
+
+### Web‑hands (browser automation with Playwright) 🌐🖐️
+- New helper: `tools/web_hands.py` — a Playwright-based CLI and Python API for reliable browser interactions (open, click by text or selector, fill inputs, screenshot).
+- Install (one‑time):
+  - pip install playwright
+  - python -m playwright install
+- Quick examples:
+  - `python tools/web_hands.py open "https://example.com" --headful`
+  - `python tools/web_hands.py click-text "Send verification" --headful`
+  - `python tools/web_hands.py fill "#email" "you@example.com" --headful`
+  - `python tools/web_hands.py screenshot --out page.png --headful`
+- When to use:
+  - Prefer `web_hands.py` over pixel-matching for web UIs — it uses DOM selectors and is far more robust.
+  - Use `tools/puppeteer_send_verification.js` (Node/Puppeteer) if you prefer a Node-based flow.
+- Notes:
+  - See `tools/PLAYWRIGHT.md` for a short cheatsheet and `tools/web_hands.py` for the API.
+  - Keep browser sessions `--headful` while developing so you can visually verify actions.
 
 ## Heartbeat & Tasks ⏱️
 - Tasks file: `samus_manus_mvp/tasks.json` (add pending tasks there)
@@ -88,7 +124,7 @@ Files saved by default: `heartbeat_state.json`, `tasks.json`, `memory.db`, `appr
 Tip: install skills with `npx clawhub@latest install <skill>` or download the skill ZIP from ClawHub for inspection before running.
 
 ## Copilot session snapshot (saved 2026-02-17) 💾
-- Core components confirmed present: `eyes.py`, `voice_loop.py`, `voice_assistant.py`, `heartbeat.py`, `samus_agent.py`, `memory.py`, `draw_smiley.py`, `tasks.json`, `heartbeat_state.json`, `requirements.txt`, `hands.py`.
+- Core components confirmed present: `eyes.py`, `voice_loop.py`, `voice_assistant.py`, `heartbeat.py`, `samus_agent.py`, `memory.py`, `draw_smiley.py`, `tasks.json`, `heartbeat_state.json`, `requirements.txt`, `hands.py`, `tools/web_hands.py` (`tools/PLAYWRIGHT.md`).
 - `samus_manus_mvp/model/` contains ASR/Kaldi-style artifacts (`am/`, `conf/`, `graph/`, `ivector/`) — offline STT model is available.
 - Observations from inspection: voice (TTS/STT), eyes (screenshot/find), and hands (GUI automation CLI) are implemented and runnable; memory persists locally; heartbeat and task scheduling are in place.
 - Recent changes performed in this session (saved 2026-02-17):
