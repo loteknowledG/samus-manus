@@ -16,3 +16,26 @@ Thumbs.db
 
 # Models (Vosk)
 models/
+
+# Local databases and artifacts
+*.db
+samus_manus_mvp/memory.db
+memory.db
+
+# Node
+node_modules/
+
+# Package manager locks (optional - keep if you want deterministic installs)
+# package-lock.json
+
+# Secrets & keys
+*.pem
+*.key
+.pif-agent.json
+.env
+*.env
+
+# Editor / OS
+.vscode/
+*.log
+
