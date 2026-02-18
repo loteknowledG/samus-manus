@@ -45,7 +45,20 @@ Windows: install a Norwegian TTS voice (recommended)
 - PowerShell check (optional):
   - `Get-ChildItem HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens` — installed SAPI voice tokens.
 
-Notes: if Vosk not available, voice assistant falls back to typed input. If a native Norwegian voice is not available on your Windows build, use the Microsoft language‑packs UI above or consider a cloud TTS with Norwegian voices (Edge TTS / Azure).
+Cloud TTS (Edge / Azure) — higher-quality Norwegian voices
+- Quick install (optional):
+  - `pip install edge-tts` — lightweight client that uses Microsoft Edge TTS voices (no API key required)
+  - For Azure Neural TTS (more features), see Azure docs and set `AZURE_TTS_KEY` / `AZURE_TTS_REGION` as needed.
+- List Norwegian cloud voices (example):
+  - `python tools/edge_tts.py --list --locale nb-NO`
+- Synthesize & play with Edge TTS:
+  - `python tools/edge_tts.py --voice nb-NO-HeddaNeural "Hei — jeg heter Hanna"`
+  - This saves a temporary MP3 and opens it with your system player.
+- When to use:
+  - Use cloud voices for higher fidelity or if a native Windows Norwegian voice isn't available.
+  - Edge TTS is convenient (no API key) and supports `nb-NO-HeddaNeural` and other Norwegian neural voices.
+
+Notes: if Vosk not available, voice assistant falls back to typed input. If you want, I can add optional edge-tts playback in `tools/tts_say.py` so `--voice` accepts cloud voice names.
 
 ## Persistent memory (advanced, optional)
 - The persistent memory + embeddings feature is an optional, advanced capability and has been moved to the end of this file. See the **Optional — Persistent memory** section for setup, installation, and `OPENAI_API_KEY` details.
