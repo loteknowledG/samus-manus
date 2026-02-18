@@ -32,5 +32,5 @@ For more details (usage examples, CLI, demos), see the original docs in the repo
 ---
 
 Merged content: files from the workspace `nowon/samus_manus_mvp` have been copied here for consolidation.  
-Added files (copy only) include: `samus_agent.py`, `memory.py`, `memory_cli.py`, `voice_assistant.py`, `heartbeat.py`, `tasks.json`, `startup_restore.py`, `eyes.py`, `draw_smiley.py`, plus `README.samus_manus_mvp.md` and `requirements.samus_manus_mvp.txt`.  
+Added files (copy only) include: `samus_agent.py`, `memory.py`, `memory_cli.py`, `voice_assistant.py`, `heartbeat.py`, `tasks.json`, `startup_restore.py`, `eyes.py`, `draw_smiley.py`. Deprecated/archived copies such as `README.samus_manus_mvp.md` and `requirements.samus_manus_mvp.txt` have been moved to the `deprecated/` folder.
 Conflicting files were kept as suffixed copies (e.g. `hands.nowon.py`, `voice_loop.nowon.py`) so you can review/merge changes manually.

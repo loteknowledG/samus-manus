@@ -1,8 +1,9 @@
 pyautogui
 pillow
-openai
 python-dotenv
 pyttsx3
 requests
 vosk
 sounddevice
+# Optional: install the OpenAI SDK if you want embeddings / OpenAI planner (advanced)
+# openai

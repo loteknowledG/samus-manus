@@ -1,0 +1,6 @@
+python-dotenv
+pyttsx3
+requests
+vosk
+sounddevice
+pyautogui

@@ -30,6 +30,9 @@ voice = [
   "pyttsx3",
   "numpy"
 ]
+embeddings = [
+  "openai"
+]
 
 [project.scripts]
 hands = "hands:main"

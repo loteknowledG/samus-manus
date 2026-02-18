@@ -1,0 +1,35 @@
+{
+  "tasks": [
+    {
+      "id": "task-1",
+      "task": "Take a screenshot",
+      "status": "done",
+      "created_at": 1708180000,
+      "result": "Error running task: Command '['python', 'C:\\\\dev\\\\nowon\\\\samus_manus_mvp\\\\samus_agent.py', 'run', 'Take a screenshot', '--no-approve']' timed out after 120 seconds",
+      "completed_at": 1771350221.140554
+    },
+    {
+      "id": "task-2",
+      "task": "make an approval",
+      "status": "done",
+      "created_at": 1771440000,
+      "result": "STARTUP RESTORE SUMMARY:\nBootup notes loaded. \u2014 Memory loaded: 5 records; recent: task_result:done; action:DONE; approval:y; action:screenshot saved samus_screenshot.png; approval:y \u2014 STT model present\n\nRecent memory entries:\n- task_result : done\n- action : DONE\n- approval : y\n- action : screenshot saved samus_screenshot.png\n- approval : y\nTask: make an approval\n\n> action 1: {\"type\": \"type\", \"text\": \"make an approval\"}\nImported existing <module 'comtypes.gen' from 'C:\\\\Users\\\\quang\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\Lib\\\\site-packages\\\\comtypes\\\\gen\\\\__init__.py'>\nUsing writeable comtypes cache directory: 'C:\\Users\\quang\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen'\nTraceback (most recent call last):\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 303, in <module>\n    main()\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 299, in main\n    args.func(args)\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 280, in <lambda>\n    runp.set_defaults(func=lambda args: run_task(\" \".join(args.task), args.apply, args.approve, args.max_steps))\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 249, in run_task\n    print(\"  \\u2192\", result)\n  File \"C:\\Users\\quang\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\encodings\\cp1252.py\", line 19, in encode\n    return codecs.charmap_encode(input,self.errors,encoding_table)[0]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnicodeEncodeError: 'charmap' codec can't encode character '\\u2192' in position 2: character maps to <undefined>\n",
+      "completed_at": 1771381407.5956342
+    },
+    {
+      "id": "task-3",
+      "task": "make an approval again",
+      "status": "done",
+      "created_at": 1771443600,
+      "result": "STARTUP RESTORE SUMMARY:\nBootup notes loaded. \u2014 Memory loaded: 5 records; recent: plan:[{\"type\": \"type\", \"text\": \"make an approval\"}, {\"type\": \"done\"}]; task:make an approval; task_result:done; action:DONE; approval:y \u2014 STT model present\n\nRecent memory entries:\n- plan : [{\"type\": \"type\", \"text\": \"make an approval\"}, {\"type\": \"done\"}]\n- task : make an approval\n- task_result : done\n- action : DONE\n- approval : y\nTask: make an approval again\n\n> action 1: {\"type\": \"type\", \"text\": \"make an approval again\"}\nImported existing <module 'comtypes.gen' from 'C:\\\\Users\\\\quang\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\Lib\\\\site-packages\\\\comtypes\\\\gen\\\\__init__.py'>\nUsing writeable comtypes cache directory: 'C:\\Users\\quang\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen'\nTraceback (most recent call last):\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 303, in <module>\n    main()\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 299, in main\n    args.func(args)\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 280, in <lambda>\n    runp.set_defaults(func=lambda args: run_task(\" \".join(args.task), args.apply, args.approve, args.max_steps))\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\dev\\samus-manus\\samus_manus_mvp\\samus_agent.py\", line 249, in run_task\n    print(\"  \\u2192\", result)\n  File \"C:\\Users\\quang\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\encodings\\cp1252.py\", line 19, in encode\n    return codecs.charmap_encode(input,self.errors,encoding_table)[0]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnicodeEncodeError: 'charmap' codec can't encode character '\\u2192' in position 2: character maps to <undefined>\n",
+      "completed_at": 1771381432.7013535
+    },
+    {
+      "id": "task-4",
+      "task": "make an approval",
+      "status": "pending",
+      "created_at": 1771381432,
+      "auto_approve": true
+    }
+  ]
+}

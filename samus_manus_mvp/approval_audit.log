@@ -1,0 +1,3 @@
+{"ts": 1771382115.5210724, "auto": true, "approval": "y", "task": "Take a screenshot", "action": {"type": "wait", "seconds": 0.5}, "step": 1}
+{"ts": 1771382116.0324275, "auto": true, "approval": "y", "task": "Take a screenshot", "action": {"type": "screenshot", "out": "samus_screenshot.png"}, "step": 2}
+{"ts": 1771382116.363429, "auto": true, "approval": "y", "task": "Take a screenshot", "action": {"type": "done"}, "step": 3}

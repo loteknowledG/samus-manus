@@ -1,175 +1,149 @@
-# bootup.md
+# bootup.md — Samus‑Manus MVP (first run)
 
-Quick boot sequence for local hands/voice.
+Quick, repeatable steps to get Samus‑Manus (voice + heartbeat + memory + hands/eyes) running locally.
 
-## 1) Install base (hands/eyes)
-```powershell
-pip install -r requirements.txt
-```
-Verify:
-```powershell
-python .\hands.py screenshot --out .\boot_check.png
-```
+## Prerequisites ✅
+- Python 3.10+ installed
+- Recommended: a working audio device (speaker + microphone) for voice demos
+- (Optional, advanced) `OPENAI_API_KEY` — only required for embeddings / planner features; the core voice, hands, and heartbeat flows work without it.
 
-Paint drawing test (man + machine are friends)
-- Purpose: verify `hands.py` can control an app (MS Paint) and capture before/after screenshots.
+## Install dependencies 📦
+- From repo root:
+  - pip install -r samus_manus_mvp/requirements.txt
 
-Steps:
-1. Take a pre-check screenshot to confirm the desktop state:
+## First run — smoke checks 🔍
+1. TTS (voice):
+   - python samus_manus_mvp/voice_loop.py "Hello Samus — voice test"
+2. Agent (planner simulation):
+   - python samus_manus_mvp/samus_agent.py run "Take a screenshot"
+3. Local heartbeat (announces tasks):
+   - python samus_manus_mvp/heartbeat.py --once --announce
 
-```powershell
-python .\hands.py screenshot --out .\before_paint.png
-```
+## Enable live voice (STT + TTS) 🎤
+- Optional offline STT: Vosk model (small):
+  - mkdir -p samus_manus_mvp/model
+  - download `https://alphacephei.com/vosk/models` (e.g. `vosk-model-small-en-us-0.15`) and extract into `samus_manus_mvp/model`
+- Run voice assistant (interactive):
+  - python samus_manus_mvp/voice_assistant.py --live
 
-2. Run the automated Paint drawing (opens MS Paint, draws, saves a result):
+Notes: if Vosk not available, voice assistant falls back to typed input.
 
-```powershell
-python .\draw_friends.py
-```
+## Persistent memory (advanced, optional)
+- The persistent memory + embeddings feature is an optional, advanced capability and has been moved to the end of this file. See the **Optional — Persistent memory** section for setup, installation, and `OPENAI_API_KEY` details.
 
-- Output: `friends_paint.png` (saved in repo root).
-- Optional: take an explicit after screenshot with `hands.py` if you want a second capture:
+(If you don't need semantic search or OpenAI-based planner features, you can ignore the memory/embeddings section.)
 
-```powershell
-python .\hands.py screenshot --out .\after_paint.png
-```
+## Eyes & Hands (vision + automation) 👁️🖐️
+- Screenshots: `capture_screenshot()` via `eyes.py` or `samus_agent` actions.
+- Image‑targeting: `find_click` action in planner uses `eyes.find_on_screen()` (requires pyautogui + optional OpenCV for confidence).
+- Safe execution: actions are simulated by default. Use `--apply` to actually run GUI actions.
+  - Example: python samus_manus_mvp/samus_agent.py run "Open Notepad and type hello" --apply
+- Safety: `pyautogui.FAILSAFE` is enabled — move mouse to a corner to abort.
 
-Notes:
-- The `draw_friends.py` script automates Paint to draw a human + robot handshake and saves `friends_paint.png` for verification.
-- Use `pyautogui` failsafe (move cursor to a screen corner) to abort if needed.
+## Heartbeat & Tasks ⏱️
+- Tasks file: `samus_manus_mvp/tasks.json` (add pending tasks there)
+- Per‑task whitelist: add `"auto_approve": true` to a task in `tasks.json` to allow the heartbeat to automatically `--apply` that task when running in whitelist mode.
+- Start continuous heartbeat:
+  - python samus_manus_mvp/heartbeat.py --interval 1800 --announce
+  - Start in background/daemon: `python samus_manus_mvp/heartbeat.py --background --announce`
+  - Stop background heartbeat: `python samus_manus_mvp/heartbeat.py --stop`
+  - Auto‑apply pending tasks (background): `python samus_manus_mvp/heartbeat.py --background --auto-apply --announce`
+  - Control auto‑apply mode: `--auto-apply-mode whitelist` (default) or `--auto-apply-mode global`
 
-## 2) 60‑second demo (optional)
-```powershell
-powershell -ExecutionPolicy Bypass -File .\demo_60s.ps1
-```
+> The background heartbeat stores its PID in `heartbeat_state.json` under `heartbeat_pid` — use `--stop` or kill the PID to stop it.
 
-## 3) Voice 
-Install:
-```powershell
-pip install vosk sounddevice pyttsx3 numpy
-```
-Run:
-```powershell
-python .\voice_loop.py               # starts voice loop (use --no-prompt to silence the "Speak now." prompt)
-```
+Note: when a `make an approval` task is processed, the heartbeat will automatically re-add a fresh `make an approval` pending task (marked `auto_approve: true`) so approvals do not permanently block automated runs.
 
-Microphone test (quick):
-- Record a short sample and transcribe it with Vosk:
+## Backup & restore (recommended) 💾
+- Quick backup (creates `backups/state-<timestamp>.zip`):
+  - `python tools/backup_state.py backup`
+- List backups:
+  - `python tools/backup_state.py list`
+- Restore from a backup:
+  - `python tools/backup_state.py restore backups/state-20260101T123456.zip --yes`
 
-```powershell
-python tools\mic_test.py            # records 4s and prints transcript
-python tools\mic_test.py --speak    # also speaks the transcript via local TTS
-python tools\mic_test.py --no-prompt # don't audibly say "Speak now." before recording
-python tools\mic_test.py -s 6       # record 6 seconds
-```
+Files saved by default: `heartbeat_state.json`, `tasks.json`, `memory.db`, `approval_audit.log`.
+- Recommended: run `tools/backup_state.py backup` after you finish a configuration session or before major changes.
 
-- Example mic-check phrase to speak or expect from TTS: "I am Samus. Samus surrounds you."
+## Moltbook & external integrations (optional) 🚫
+- Moltbook integration is optional and **not required** for the MVP.
+- We kept Moltbook separate — you can ignore or remove `~/.config/moltbook` credentials.
 
-Notes:
-- First run downloads the Vosk English model (~50MB) into `models/` (gitignored). Local copy present at `models/vosk-model-small-en-us-0.15/`.
-- Disable the audible "Speak now." prompt with `--no-prompt` (supported by `tools/mic_test.py` and `voice_loop.py`).
-- The persistent TTS server (`tools/tts_server.py`) now logs playback and supports a blocking acknowledgement — use `python tools/tts_say.py --wait "text"` to block until audio finishes. `tools/tts_say.py --ensure` will start the server in a foreground-capable mode and write logs to `tools/tts_server.log` so playback is more reliable and easier to debug.
-- Press Enter to talk in `voice_loop.py`; try: "move to center", "click", "double click", "type hello", "quit"
+## Troubleshooting & tips ⚠️
+- If TTS silent: ensure system audio + `pyttsx3` voices installed. Try restarting Python process.
+- If STT fails: confirm `samus_manus_mvp/model` contains a Vosk model and `sounddevice` works.
+- If `pyautogui` actions misalign: take a screenshot first to verify coordinates.
 
-Safety:
-- pyautogui FAILSAFE: move cursor to any screen corner to abort.
-- Ctrl+C interrupts any script.
+## Next steps (suggested) ✨
+- Add more task templates to `tasks.json` for demos.
+- Add persistent logs and screenshots for audit trails.
+- (Optional) Add CI checks that validate `samus_agent` dry‑run behavior.
 
-Troubleshooting:
-- Voice loop won't start: confirm `models/vosk-model-small-en-us-0.15/` exists and microphone permissions are granted. Check `python -m pip install -r requirements-voice.txt` if dependencies are missing.
-- Screenshot fails: ensure display/permissions are correct and run the sanity-check task (below) or `python .\hands.py screenshot --out .\boot_check.png` from PowerShell.
-- pip install errors: run `python -m pip install --upgrade pip` then retry `pip install -r requirements.txt`.
+## Copilot session snapshot (saved 2026-02-17) 💾
+- Core components confirmed present: `eyes.py`, `voice_loop.py`, `voice_assistant.py`, `heartbeat.py`, `samus_agent.py`, `memory.py`, `draw_smiley.py`, `tasks.json`, `heartbeat_state.json`, `requirements.txt`, `hands.py`.
+- `samus_manus_mvp/model/` contains ASR/Kaldi-style artifacts (`am/`, `conf/`, `graph/`, `ivector/`) — offline STT model is available.
+- Observations from inspection: voice (TTS/STT), eyes (screenshot/find), and hands (GUI automation CLI) are implemented and runnable; memory persists locally; heartbeat and task scheduling are in place.
+- Recent changes performed in this session (saved 2026-02-17):
+  - `hands.py` CLI stub added (safe-by-default simulation when `pyautogui` is missing).
+  - GitHub Actions smoke workflow added to `.github/workflows/smoke.yml`.
+  - Heartbeat: added `--background` / `--stop`, `--auto-apply`, and `--auto-apply-mode` (whitelist/global); persisted in `heartbeat_state.json`.
+  - Per-task whitelist (`"auto_approve": true` in `tasks.json`) and heartbeat whitelist behavior implemented.
+  - Memory‑driven auto‑approve + `auto_approve` preference saved to memory; approvals are audit‑logged.
+  - Approval audit log added: `samus_manus_mvp/approval_audit.log` (JSON lines; typed text trimmed for privacy).
+  - Backup/restore tool added: `tools/backup_state.py` (documents included in this file).
+  - `memory_cli.py` extended with `persona` helpers.
 
-Run the sanity-check from VS Code:
-- A VS Code task `Hands: screenshot` is available (`.vscode/tasks.json`). Run it with Ctrl+Shift+P → "Tasks: Run Task" → select `Hands: screenshot`.
-- Or run manually in PowerShell: `python .\hands.py screenshot --out .\boot_check.png`.
+- Recommended immediate actions:
+  - Unit tests added for `hands.py`, `eyes.py`, and `samus_agent` — run with `pytest` (CI smoke workflow at `.github/workflows/smoke.yml`).
+  - Add a short Windows audio troubleshooting checklist in this file.
+  - (Optional) Extend CI smoke tests to run lint/tests.
+- Quick references:
+  - ASR/STT model: `samus_manus_mvp/model/`
+  - Agent entry points: `samus_manus_mvp/samus_agent.py`, `voice_assistant.py`, `voice_loop.py`, `samus_manus_mvp/hands.py`
+  - Tasks & state: `samus_manus_mvp/tasks.json`, `heartbeat_state.json`
 
-Optional verification:
-- The Vosk model folder `models/vosk-model-small-en-us-0.15/` is present in the repo (checked).
 
-## 4) Heartbeat
-Local heartbeat watcher + task runner — keeps `heartbeat_state.json` up to date and can announce/status-check and run pending `tasks.json` entries.
+## Optional — Persistent memory (SQLite + embeddings) 🧠
+- Local DB: `samus_manus_mvp/memory.db` (created automatically).
+- What is auto-captured: `voice_command`, `typed_input`, `task`, `plan`, `approval`, `action`, `task_result` (voice/agent activity and approvals are saved automatically).
+- API key & SDK: `OPENAI_API_KEY` enables embeddings & semantic search; the `openai` Python package is optional. Install only if you want embeddings/planner features:
+  - `pip install openai`
 
-- Run one check and exit:
+### Quick usage (python REPL)
+- `from samus_manus_mvp.memory import get_memory`
+- `m = get_memory(); m.add('note','Remember to water plants')`
+- `m.query_similar('water plants')`
 
-```powershell
-python heartbeat.py --once
-```
+### Memory CLI (inspect / export / restore)
+- `python samus_manus_mvp/memory_cli.py list --limit 50`
+- `python samus_manus_mvp/memory_cli.py query "voice" --top-k 10`
+- `python samus_manus_mvp/memory_cli.py export --out mem-export.json`
+- `python samus_manus_mvp/memory_cli.py import --in mem-export.json`
+- `python samus_manus_mvp/memory_cli.py backup --out backups/memory.db.bak`
 
-- Run continuously (default interval 1800s):
+### Rebuild embeddings (after adding OPENAI_API_KEY)
+- Set `OPENAI_API_KEY` in your environment and install the `openai` SDK, then:
+  - `python samus_manus_mvp/memory_cli.py rebuild-embeddings --limit 500`
 
-```powershell
-python heartbeat.py
-```
+### Quick restore checklist — make Copilot "remember" everything
+1. Restore/copy `memory.db` into `samus_manus_mvp/` or run `memory_cli.py import --in <file>`.
+2. Confirm load: `python -c "from samus_manus_mvp.memory import get_memory; print(len(get_memory().all(10)))"`.
+3. If you added `OPENAI_API_KEY` and installed the `openai` SDK, run `rebuild-embeddings` to enable semantic search.
+4. (Optional) Run `python samus_manus_mvp/memory_cli.py query "<keyword>" --top-k 10` to verify important entries.
 
-- Use TTS announcements:
+> Important: memory is local (SQLite). Do **not** commit `samus_manus_mvp/memory.db` to public repos — add it to `.gitignore` if needed.
 
-```powershell
-python heartbeat.py --announce
-```
+### How Copilot/agent uses memory
+- The agent and voice assistant call `get_memory()` automatically to save and query records.
+- The agent will **auto-load memory on startup by default** (use `--no-restore` to disable automatic restore).
+- The agent now consults recent approval records and will **auto‑approve matching actions** based on past decisions (you can still override interactively).
+- **Audit log:** all approval decisions are appended to `samus_manus_mvp/approval_audit.log` as JSON lines. Note: approvals are recorded in the audit log (including the `action` payload), but are **not** duplicated into `memory.db` (audit-only unless you opt to persist).
+- After you restore/import `memory.db`, Copilot can query and **speak** past commands and results using `voice_loop.speak()`.
 
-- Change polling interval (seconds):
+### Tips & housekeeping ✨
+- Export regularly (`memory_cli.py export`) and keep periodic backups.
+- Rebuild embeddings once after enabling `OPENAI_API_KEY` so semantic search works for historical data.
+- Prune or archive old entries if privacy or size is a concern.
 
-```powershell
-python heartbeat.py --interval 60
-```
-
-Notes:
-- State file: `heartbeat_state.json` (stores last heartbeat timestamp).
-- Tasks file: `tasks.json` — add tasks with `status: "pending"` to have them executed (simulated by `samus_agent.py run ... --no-approve`).
-- Requires local TTS (`pyttsx3`) for voice; fallback prints to console if unavailable.
-- Stop with Ctrl+C; `pyautogui` failsafe still applies.
-
-## 5) Session memory
-`MEMORY.md` contains the persistent session context for Samus‑Manus — identity, defaults, last‑session notes, and next‑session TODOs. Edit `MEMORY.md` to persist any state or reminders you want available on next boot.
-
-- Open/edit: `code MEMORY.md` or open the file in your editor.
-- Quick checks:
-  - Review `Last session notes` for recent actions.
-  - Check `Next session TODO` for outstanding items to run after boot.
-- Use it to store defaults such as working dir, artifact folder, and safety cues.
-
-Examples:
-- Add a TODO under `Next session TODO` to persist a task across boots.
-- Use the `Boot sequence (quick)` entries in `MEMORY.md` for common commands.
-
-Notes:
-- Treat `MEMORY.md` as the single source of session context for local runs.
-- Keep entries concise and append‑only when possible.
-
-## 6) Memory CLI
-A thin CLI for inspecting and managing the repository memory store. See `MEMORY_CLI.md` for full details; common commands below use `samus_manus_mvp/memory_cli.py`.
-
-Common commands:
-- List recent entries:
-  - `python samus_manus_mvp/memory_cli.py list --limit 20`
-- Query (semantic / fallback):
-  - `python samus_manus_mvp/memory_cli.py query "voice" --top-k 5`
-- Export to JSON:
-  - `python samus_manus_mvp/memory_cli.py export --out mem-export.json`
-- Import from JSON:
-  - `python samus_manus_mvp/memory_cli.py import --in mem-export.json`
-- Rebuild embeddings (requires `OPENAI_API_KEY`):
-  - `python samus_manus_mvp/memory_cli.py rebuild-embeddings --limit 100`
-- Backup the DB file:
-  - `python samus_manus_mvp/memory_cli.py backup --out backups/memory.db.bak`
-
-Notes:
-- The CLI wraps `samus_manus_mvp.memory.get_memory()` and mirrors the JSON format returned by `Memory.all()`.
-- Rebuilding embeddings requires `OPENAI_API_KEY` (set before running).
-- See `MEMORY_CLI.md` for examples and advanced options.
-
-## 7) Manifest
-High‑level capabilities and primitives for Samus‑Manus. See `manifest.md` for full details.
-
-- Primitives: `Mouse` (move/click/drag), `Keyboard` (type/press/hotkey), `Screenshots` (capture/inspect).
-- Tools: `hands.py` (CLI for direct control), `voice_loop.py` (offline voice control — Vosk + pyttsx3).
-- Dependencies: `pyautogui`, `pillow`, plus optional voice deps (`vosk`, `sounddevice`, `pyttsx3`, `numpy`).
-
-Quick checks:
-- Hands CLI: `python hands.py screenshot --out screen.png` — verifies the core input/output loop.
-- Voice: `python voice_loop.py` — starts offline STT/TTS (first run may auto-download model).
-
-Notes:
-- `manifest.md` is the best place to understand what the project can do and which files implement core primitives.
-- Use the primitives in `hands.py` for reproducible automations and `voice_loop.py` for local voice control.
+---
+Keep this file updated with any environment changes — it’s your single‑point boot guide for Samus‑Manus.
