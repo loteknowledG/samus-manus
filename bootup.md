@@ -42,8 +42,25 @@ Windows: install a Norwegian TTS voice (recommended)
     - `python samus_manus_mvp/voice_loop.py --voice Hedda "Hei — jeg heter Hanna, 26 år, fra Bergen. Si ifra hvis du trenger noe."`
     - or use the Hanna preset (will prefer Hedda if installed):
       `python samus_manus_mvp/voice_loop.py --hanna "Hei — jeg heter Hanna..."`
+
 - PowerShell check (optional):
   - `Get-ChildItem HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens` — installed SAPI voice tokens.
+  - `Get-WindowsCapability -Online | Where-Object Name -like '*nb-NO*'` — list nb-NO language / speech capabilities.
+
+PowerShell (admin) — install Hedda (nb-NO)
+- NOTE: requires **Administrator** rights, internet, and may download a language pack (100+ MB). Sign out / restart after install.
+- Discover the exact capability name first (do **not** install without confirming the name):
+  - `Get-WindowsCapability -Online | Where-Object Name -like '*nb-NO*' | Format-Table -AutoSize`
+- Example install command (replace the capability name you found):
+  - `Add-WindowsCapability -Online -Name "Speech.TTS.nb-NO~~~~0.0.1.0"`
+  - or using DISM: `dism /Online /Add-Capability /CapabilityName:Speech.TTS.nb-NO~~~~0.0.1.0`
+- Verify the voice appears for SAPI/pyttsx3:
+  - `Get-ChildItem HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens`
+  - `python samus_manus_mvp/voice_loop.py --list-voices` (look for `Hedda` / `nb-NO`)
+- Remove if needed:
+  - `Remove-WindowsCapability -Online -Name "Speech.TTS.nb-NO~~~~0.0.1.0"`
+
+Notes: if you can't install the system voice, use the cloud `nb-NO-HeddaNeural` via `tools/edge_tts.py` (documented below).
 
 Cloud TTS (Edge / Azure) — higher-quality Norwegian voices
 - Quick install (optional):
