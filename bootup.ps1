@@ -1,5 +1,5 @@
 <#
-bootup.ps1 — convenience script to run the project's boot sequence.
+bootup.ps1 - convenience script to run the project's boot sequence.
 
 Usage examples:
   powershell -ExecutionPolicy Bypass -File .\bootup.ps1 -All           # install, screenshot, demo, voice
@@ -44,7 +44,7 @@ if ($Install) {
     } else {
         Write-Host "Upgrading pip..."
         & python -m pip install --upgrade pip
-        if ($LASTEXITCODE -ne 0) { Write-Warning "pip upgrade failed (exit $LASTEXITCODE) — continuing." }
+        if ($LASTEXITCODE -ne 0) { Write-Warning "pip upgrade failed (exit $LASTEXITCODE) - continuing." }
 
         Write-Host "Installing base requirements (requirements.txt)..."
         & python -m pip install -r .\requirements.txt
