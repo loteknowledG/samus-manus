@@ -91,6 +91,23 @@ def cmd_kg_query(q: str, top_k: int = 5, include_approvals: bool = True):
             print('-', a.get('ts'), a.get('answer') or a.get('approval'), '-', a.get('question') or a.get('task'))
 
 
+def cmd_list_persona():
+    m = get_memory()
+    for r in m.all(50):
+        if r.get('type') == 'persona':
+            print(r.get('text'))
+            return
+    print('No persona set')
+
+
+def cmd_list_voice():
+    m = get_memory()
+    for r in m.all(50):
+        if r.get('type') == 'voice':
+            print(r.get('text'))
+            return
+    print('No preferred voice set')
+
 def main():
     ap = argparse.ArgumentParser(prog='memory', description='Memory CLI for Samus‑Manus')
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -134,6 +151,13 @@ def main():
 
     p = sub.add_parser('persona-show', help='Show the most recent persona')
     p.set_defaults(func=lambda a: cmd_list_persona())
+
+    p = sub.add_parser('voice-set', help='Set a preferred TTS voice in memory')
+    p.add_argument('voice', help='Voice identifier (e.g. Hedda or nb-NO-HeddaNeural)')
+    p.set_defaults(func=lambda a: cmd_add('voice', a.voice, '{}'))
+
+    p = sub.add_parser('voice-show', help='Show the most recent preferred TTS voice')
+    p.set_defaults(func=lambda a: cmd_list_voice())
 
     p = sub.add_parser('kg-query', help='Query memory + approvals (knowledge)')
     p.add_argument('q', help='Query text')

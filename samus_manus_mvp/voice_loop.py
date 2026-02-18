@@ -36,6 +36,23 @@ if __name__ == '__main__':
 
     eng = _get_engine()
 
+    # if user hasn't explicitly chosen a voice, try loading a saved preferred voice from memory
+    if not args.voice and not args.hanna:
+        try:
+            from samus_manus_mvp.memory import get_memory
+            for r in get_memory().all(50):
+                if r.get('type') == 'voice' and r.get('text'):
+                    pref = r.get('text')
+                    try:
+                        eng.setProperty('voice', pref)
+                        print(f"Using preferred voice from memory: {pref}")
+                        break
+                    except Exception:
+                        # ignore if engine doesn't support that identifier
+                        pass
+        except Exception:
+            pass
+
     # list voices and exit
     if args.list_voices:
         voices = eng.getProperty('voices')
