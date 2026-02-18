@@ -238,9 +238,16 @@ def check_once(announce: bool = False, global_auto_apply: bool = False, mode: st
 
     # If we processed an approval task, ensure a fresh "make an approval" pending task exists
     if processed_approval:
-        # compute next numeric id for tasks like "task-N"
+        # compute next numeric id for tasks like "task-N"; ignore non-numeric suffixes
         nt = [tt.get('id') for tt in tasks if isinstance(tt.get('id'), str) and tt.get('id').startswith('task-')]
-        nums = [int(x.split('-')[1]) for x in nt if x and '-' in x]
+        nums = []
+        for x in nt:
+            try:
+                suffix = x.split('-', 1)[1]
+            except Exception:
+                continue
+            if suffix.isdigit():
+                nums.append(int(suffix))
         next_n = (max(nums) + 1) if nums else 1
         new_task = {
             'id': f'task-{next_n}',

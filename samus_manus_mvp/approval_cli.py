@@ -16,7 +16,10 @@ BASE = Path(__file__).parent
 AUDIT_PATH = BASE / 'approval_audit.log'
 
 
-def load_audits(path: Path = AUDIT_PATH):
+def load_audits(path: Path | None = None):
+    # prefer explicit path, otherwise use the module-level AUDIT_PATH so
+    # callers (and tests) can monkeypatch `approval_cli.AUDIT_PATH` safely.
+    path = path or AUDIT_PATH
     if not path.exists():
         return []
     out = []
