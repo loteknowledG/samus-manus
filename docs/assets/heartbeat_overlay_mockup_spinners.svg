@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="980" height="360" viewBox="0 0 980 360" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .bg { fill:#0b0b0c }
+    .panel { fill: #0f1011; stroke:#222; stroke-width:2; rx:16 }
+    .tile { fill: linearGradient(#222,#0b0b0b); stroke:#1b1b1b; rx:12 }
+    .digit-large { font: 78px 'Segoe UI', Roboto, Arial; fill:#eef2f3; font-weight:800 }
+    .digit-small { font: 22px 'Segoe UI', Roboto, Arial; fill:#eef2f3; font-weight:700 }
+    .label { font: 10px 'Segoe UI', Roboto, Arial; fill:#9aa0a6; letter-spacing:1px }
+    .spinner { fill:#121212; stroke:#2a2a2a; rx:8 }
+    .arrow { fill:#cfcfcf; opacity:0.95 }
+    .help { font:12px 'Segoe UI', Roboto; fill:#9aa0a6 }
+    .muted { fill:#6f757a }
+  </style>
+
+  <rect width="100%" height="100%" class="bg"/>
+  <g transform="translate(40,30)">
+    <!-- large center tile -->
+    <rect x="200" y="40" width="560" height="220" class="panel"/>
+
+    <!-- small spinners row (3 small number spinners) -->
+    <g transform="translate(320,20)">
+      <!-- Hours spinner -->
+      <g transform="translate(0,0)">
+        <rect width="120" height="40" class="spinner"/>
+        <text x="60" y="26" text-anchor="middle" class="digit-small">02</text>
+        <text x="60" y="36" text-anchor="middle" class="label">HOURS (click / wheel / type)</text>
+        <polygon points="102,6 110,14 94,14" class="arrow"/>
+        <polygon points="102,34 110,26 94,26" class="arrow"/>
+      </g>
+
+      <!-- Minutes spinner -->
+      <g transform="translate(140,0)">
+        <rect width="120" height="40" class="spinner"/>
+        <text x="60" y="26" text-anchor="middle" class="digit-small">45</text>
+        <text x="60" y="36" text-anchor="middle" class="label">MINUTES (wheel / type)</text>
+        <polygon points="102,6 110,14 94,14" class="arrow"/>
+        <polygon points="102,34 110,26 94,26" class="arrow"/>
+      </g>
+
+      <!-- Seconds spinner -->n
+      <g transform="translate(280,0)">
+        <rect width="120" height="40" class="spinner"/>
+        <text x="60" y="26" text-anchor="middle" class="digit-small">30</text>
+        <text x="60" y="36" text-anchor="middle" class="label">SECONDS (single-step)</text>
+        <polygon points="102,6 110,14 94,14" class="arrow"/>
+        <polygon points="102,34 110,26 94,26" class="arrow"/>
+      </g>
+    </g>
+
+    <!-- large countdown display (six numeric digits HH:MM:SS) -->
+    <text x="480" y="150" text-anchor="middle" class="digit-large">02:45:30</text>
+    <text x="480" y="190" text-anchor="middle" class="label">Live Countdown — center is emphasized (primary)</text>
+
+    <!-- left/right small tiles (auto/pending) -->
+    <rect x="40" y="60" width="120" height="120" class="panel"/>
+    <text x="100" y="120" text-anchor="middle" class="digit-small">12</text>
+    <text x="100" y="144" text-anchor="middle" class="label muted">Auto‑approved</text>
+
+    <rect x="820" y="60" width="120" height="120" class="panel"/>
+    <text x="880" y="120" text-anchor="middle" class="digit-small">03</text>
+    <text x="880" y="144" text-anchor="middle" class="label muted">Pending</text>
+
+    <!-- footer usage hints -->
+    <text x="20" y="300" class="help">Interaction model: hover + mouse wheel to increment/decrement small numbers; single-click to step +/-1; double-click to type value (Enter to apply). Changes take effect immediately.</text>
+  </g>
+</svg>

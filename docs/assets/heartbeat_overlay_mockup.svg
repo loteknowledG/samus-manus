@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="980" height="320" viewBox="0 0 980 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g-dark" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="100%" stop-color="#111111"/>
+    </linearGradient>
+    <linearGradient id="g-panel" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#171717"/>
+      <stop offset="100%" stop-color="#0d0d0d"/>
+    </linearGradient>
+    <filter id="f-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+    <style>
+      .tile { rx:14; fill:url(#g-panel); stroke:#222; stroke-width:2; filter: url(#f-shadow); }
+      .digit { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; fill:#eef2f3; font-weight:700; }
+      .label { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; fill:#9aa0a6; font-size:12px; letter-spacing:1.2px; }
+      .knob-track { stroke:#3a3a3a; stroke-width:8; stroke-linecap:round; }
+      .knob { fill:#cfcfcf; stroke:#bdbdbd; stroke-width:2; }
+      .subtle { fill:#c8c8c8; opacity:0.12 }
+    </style>
+  </defs>
+
+  <!-- background -->
+  <rect width="100%" height="100%" fill="#111"/>
+  <g transform="translate(40,40)">
+
+    <!-- left small tile -->
+    <g transform="translate(0,20)">
+      <rect class="tile" width="160" height="120"/>
+      <!-- decorative slide tab -->
+      <rect x="-10" y="46" width="20" height="28" rx="3" fill="#9aa0a6" opacity="0.12"/>
+      <text x="30" y="68" class="digit" font-size="36">12</text>
+      <text x="20" y="98" class="label">AUTO</text>
+    </g>
+
+    <!-- center large tile -->
+    <g transform="translate(190,0)">
+      <rect class="tile" width="420" height="200"/>
+      <rect x="10" y="10" width="400" height="12" rx="6" fill="#000" opacity="0.12"/>
+      <text x="210" y="118" class="digit" font-size="84" text-anchor="middle">00:45</text>
+      <text x="210" y="150" class="label" text-anchor="middle">NEXT AUTO‑APPROVAL</text>
+
+      <!-- visible knob below (permanent) -->
+      <g transform="translate(120,156)">
+        <line x1="0" y1="36" x2="180" y2="36" class="knob-track" stroke-linecap="round"/>
+        <circle cx="34" cy="36" r="12" class="knob"/>
+        <!-- small tick markers -->
+        <g opacity="0.12" fill="#fff">
+          <rect x="0" y="30" width="2" height="12"/>
+          <rect x="60" y="30" width="2" height="12"/>
+          <rect x="120" y="30" width="2" height="12"/>
+          <rect x="180" y="30" width="2" height="12"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- right small tile -->
+    <g transform="translate(640,20)">
+      <rect class="tile" width="160" height="120"/>
+      <rect x="150" y="46" width="20" height="28" rx="3" fill="#9aa0a6" opacity="0.12"/>
+      <text x="42" y="68" class="digit" font-size="36">3</text>
+      <text x="28" y="98" class="label">PENDING</text>
+    </g>
+
+    <!-- footer small legend -->
+    <g transform="translate(0,160)">
+      <text x="0" y="20" class="label">Auto‑approved count · Pending tasks · Live knob adjusts countdown (release applies)</text>
+    </g>
+
+    <!-- example last-approved hover (small card) -->
+    <g transform="translate(190,208)">
+      <rect x="0" y="0" width="420" height="60" rx="8" fill="#0f0f0f" stroke="#222"/>
+      <text x="12" y="24" class="label">Last auto-approved:</text>
+      <text x="12" y="44" font-family="monospace" font-size="12" fill="#dfe6e9">screenshot -> samus_screenshot.png</text>
+    </g>
+
+  </g>
+</svg>

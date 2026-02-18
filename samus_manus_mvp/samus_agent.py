@@ -88,7 +88,21 @@ def plan_with_openai(task: str) -> list[dict]:
         return fallback_plan(task)
 
     openai.api_key = api_key
-    prompt = (
+    # try to include a persistent persona from memory (if available)
+    persona_text = None
+    try:
+        if get_memory is not None:
+            for r in get_memory().all(50):
+                if r.get('type') == 'persona':
+                    persona_text = r.get('text')
+                    break
+    except Exception:
+        persona_text = None
+
+    prompt = ""
+    if persona_text:
+        prompt += f"Persona: {persona_text}\n\n"
+    prompt += (
         "You are a safe local agent planner. Break the user's task into a short JSON array "
         "of low‑level actions. Allowed actions: click, double_click, find_click, type, press, hotkey, "
         "screenshot (out), wait (seconds), done. Return ONLY a JSON array.\nTask: "
@@ -260,10 +274,28 @@ def run_task(task: str, apply: bool, approve_each: bool, max_steps: int = 20):
                     # trim long typed text for privacy/size
                     if isinstance(action_for_audit, dict) and action_for_audit.get('type') == 'type' and 'text' in action_for_audit:
                         action_for_audit['text'] = action_for_audit['text'][:1024]
+                    # human-readable question presented to the user and chosen answer
+                    try:
+                        question_text = ''
+                        if isinstance(action_for_audit, dict):
+                            atype = action_for_audit.get('type')
+                            if atype == 'type':
+                                question_text = f"Type: {action_for_audit.get('text', '')[:200]}"
+                            elif atype == 'screenshot':
+                                question_text = f"Screenshot -> {action_for_audit.get('out') or ''}"
+                            else:
+                                question_text = json.dumps(action_for_audit, ensure_ascii=False)
+                        else:
+                            question_text = str(action_for_audit)
+                    except Exception:
+                        question_text = ''
+
                     audit_entry = {
                         'ts': time.time(),
                         'auto': True,
                         'approval': ans,
+                        'answer': ans,
+                        'question': question_text,
                         'task': task,
                         'action': action_for_audit,
                         'step': step,
@@ -280,10 +312,27 @@ def run_task(task: str, apply: bool, approve_each: bool, max_steps: int = 20):
                     action_for_audit = dict(action) if isinstance(action, dict) else action
                     if isinstance(action_for_audit, dict) and action_for_audit.get('type') == 'type' and 'text' in action_for_audit:
                         action_for_audit['text'] = action_for_audit['text'][:1024]
+                    try:
+                        question_text = ''
+                        if isinstance(action_for_audit, dict):
+                            atype = action_for_audit.get('type')
+                            if atype == 'type':
+                                question_text = f"Type: {action_for_audit.get('text', '')[:200]}"
+                            elif atype == 'screenshot':
+                                question_text = f"Screenshot -> {action_for_audit.get('out') or ''}"
+                            else:
+                                question_text = json.dumps(action_for_audit, ensure_ascii=False)
+                        else:
+                            question_text = str(action_for_audit)
+                    except Exception:
+                        question_text = ''
+
                     audit_entry = {
                         'ts': time.time(),
                         'auto': False,
                         'approval': ans,
+                        'answer': ans,
+                        'question': question_text,
                         'task': task,
                         'action': action_for_audit,
                         'step': step,

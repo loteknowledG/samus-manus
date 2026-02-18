@@ -72,7 +72,7 @@ def stt_listen_once(timeout=8):
     def callback(indata, frames, time_info, status):
         if status:
             print('STT status:', status)
-        if rec.AcceptWaveform(indata.tobytes()):
+        if rec.AcceptWaveform(bytes(indata)):
             pass
 
     try:
@@ -82,7 +82,7 @@ def stt_listen_once(timeout=8):
             data = b''
             while True:
                 indata = stream.read(4000)[0]
-                if rec.AcceptWaveform(indata.tobytes()):
+                if rec.AcceptWaveform(bytes(indata)):
                     res = json.loads(rec.Result())
                     text = res.get('text', '').strip()
                     if text:

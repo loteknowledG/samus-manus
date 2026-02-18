@@ -73,22 +73,109 @@ def check_once(announce: bool = False, global_auto_apply: bool = False, mode: st
 
     # announce heartbeat
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
-    msg = f"Samus‑Manus heartbeat at {ts}. Pending tasks: {sum(1 for t in tasks if t.get('status')=='pending')}"
+    pending_count = sum(1 for t in tasks if t.get('status') == 'pending')
+    msg = f"Samus‑Manus heartbeat at {ts}. Pending tasks: {pending_count}"
+
+    # build detailed pending-task + audit-aware summary for logging & optional TTS
+    pending_tasks = [t for t in tasks if t.get('status') == 'pending']
+    audit_path = BASE / 'approval_audit.log'
+    audits = []
+    if audit_path.exists():
+        try:
+            with open(audit_path, 'r', encoding='utf-8') as af:
+                for line in af:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        audits.append(json.loads(line))
+                    except Exception:
+                        continue
+        except Exception:
+            audits = []
+
+    pending_lines = []
+    for t in pending_tasks:
+        task_text = t.get('task')
+        # find last audit entry for this exact task text
+        last_audit = None
+        for a in reversed(audits):
+            if a.get('task') == task_text:
+                last_audit = a
+                break
+        if last_audit:
+            audited = True
+            auto_flag = bool(last_audit.get('auto'))
+            last_val = last_audit.get('approval')
+            # produce a concise human-friendly summary of the audited "question" (the action)
+            action_summary = ''
+            try:
+                act = last_audit.get('action')
+                if isinstance(act, dict):
+                    atype = act.get('type')
+                    if atype == 'type':
+                        txt = act.get('text', '')
+                        action_summary = f"type: {txt[:60]}{'...' if len(txt) > 60 else ''}"
+                    elif atype == 'screenshot':
+                        action_summary = f"screenshot -> {act.get('out') or ''}"
+                    elif atype in ('click', 'double_click'):
+                        x = act.get('x'); y = act.get('y')
+                        action_summary = f"{atype} at ({x},{y})" if x is not None and y is not None else atype
+                    elif atype in ('find_click', 'find-click'):
+                        action_summary = f"find_click: {act.get('img') or ''}"
+                    else:
+                        action_summary = atype or str(act)
+                else:
+                    action_summary = str(act)
+            except Exception:
+                action_summary = ''
+
+            if action_summary:
+                pending_lines.append(f"{t.get('id')}: {task_text} (audit: {'auto' if auto_flag else 'manual'} {last_val}; question: {action_summary})")
+            else:
+                pending_lines.append(f"{t.get('id')}: {task_text} (audit: {'auto' if auto_flag else 'manual'} {last_val})")
+        else:
+            pending_lines.append(f"{t.get('id')}: {task_text} (audit: none)")
+
+    # print + speak a concise heartbeat + pending details
     print(msg)
+    if pending_lines:
+        for pl in pending_lines:
+            print('  -', pl)
     if announce:
         try:
-            speak(msg)
+            # keep TTS concise: mention count and whether audits exist
+            if pending_count == 0:
+                speak(msg)
+            else:
+                brief = msg + '. '
+                brief += ' ; '.join([f"{p.split(':',1)[1].strip()}" for p in pending_lines[:3]])
+                if len(pending_lines) > 3:
+                    brief += f' and {len(pending_lines)-3} more pending.'
+                speak(brief)
         except Exception as e:
             print('TTS failed:', e)
 
     # handle pending tasks
     changed = False
     processed_approval = False
+    auto_announcements = []
+
     for t in list(tasks):
         if t.get('status') == 'pending':
             print('Found pending task:', t.get('id'), t.get('task'))
             if announce:
                 speak(f"Running task: {t.get('task')}")
+
+            # persist 'task started' to memory so startup can remember in-progress work
+            try:
+                from samus_manus_mvp.memory import get_memory
+                try:
+                    get_memory().add('task', t.get('task'), metadata={'source': 'heartbeat', 'task_id': t.get('id'), 'status': 'started'})
+                except Exception:
+                    pass
+            except Exception:
+                pass
 
             # determine whether to apply real GUI actions for this task
             task_auto = bool(t.get('auto_approve') or t.get('auto_apply'))
@@ -104,6 +191,43 @@ def check_once(announce: bool = False, global_auto_apply: bool = False, mode: st
             t['completed_at'] = time.time()
             changed = True
             print('Task result:', result.splitlines()[:5])
+
+            # persist task_result to memory for audit/restore
+            try:
+                from samus_manus_mvp.memory import get_memory
+                try:
+                    get_memory().add('task_result', 'done', metadata={'source': 'heartbeat', 'task_id': t.get('id'), 'task': t.get('task'), 'result': (result[:1024] if isinstance(result, str) else str(result))})
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+            # audit-write when heartbeat performed an auto‑approved (whitelisted) run
+            try:
+                if apply_now and (t.get('auto_approve') or global_auto_apply):
+                    try:
+                        action_payload = {'type': 'task', 'text': t.get('task'), 'result': (result[:1024] if isinstance(result, str) else str(result))}
+                        # human question presented for this heartbeat-run
+                        question_text = f"Run task: {t.get('task')}"
+                        audit_entry = {
+                            'ts': time.time(),
+                            'auto': True,
+                            'approval': 'y',
+                            'answer': 'y',
+                            'question': question_text,
+                            'task': t.get('task'),
+                            'action': action_payload,
+                            'step': 0,
+                        }
+                        audit_path = BASE / 'approval_audit.log'
+                        with open(audit_path, 'a', encoding='utf-8') as af:
+                            af.write(json.dumps(audit_entry, default=str) + '\n')
+                        # collect for audible summary
+                        auto_announcements.append((question_text, 'y'))
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
             # If this was an approval-generation task, remember to re-add one so approvals never block us
             try:
@@ -129,6 +253,32 @@ def check_once(announce: bool = False, global_auto_apply: bool = False, mode: st
         changed = True
         print('Appended new approval task:', new_task['id'])
 
+    # --- audible summary for this heartbeat run ---
+    try:
+        if announce:
+            if auto_announcements:
+                # speak each auto-approved question + answer
+                for q, ans in auto_announcements:
+                    s = f"Auto-approved: {q}. Answer: {ans}."
+                    try:
+                        speak(s)
+                    except Exception:
+                        pass
+                    print('TTS:', s)
+            else:
+                # no auto-approvals this run — give a concise status readout
+                total_auto = sum(1 for a in audits if a.get('auto')) if audits else 0
+                pending_now = sum(1 for tt in tasks if tt.get('status') == 'pending')
+                interval = int(state.get('interval', 1800) or 1800)
+                status_msg = f"No auto-approvals performed. Pending tasks: {pending_now}. Recorded auto-approvals: {total_auto}. Next auto in {interval} seconds."
+                try:
+                    speak(status_msg)
+                except Exception:
+                    pass
+                print('TTS:', status_msg)
+    except Exception:
+        pass
+
     if changed:
         save_tasks(tasks)
 
@@ -147,6 +297,8 @@ def main():
     ap.add_argument('--stop', action='store_true', help='Stop a background heartbeat (uses pid in heartbeat_state.json)')
     ap.add_argument('--auto-apply', action='store_true', help='When set, run pending tasks with --apply (agent performs real GUI actions)')
     ap.add_argument('--auto-apply-mode', choices=['global','whitelist'], help='How to apply --auto-apply: global=all pending tasks, whitelist=only tasks with `auto_approve`')
+    ap.add_argument('--afk-threshold', type=int, default=0, help='Minutes of inactivity before heartbeat treats you as AFK (0=disabled)')
+    ap.add_argument('--afk-mode', choices=['global','whitelist'], default='whitelist', help='When AFK: global=auto-apply all pending tasks; whitelist=only tasks marked auto_approve')
     args = ap.parse_args()
 
     # stop background heartbeat if requested
@@ -173,9 +325,28 @@ def main():
     state = load_state()
     effective_mode = args.auto_apply_mode or state.get('auto_apply_mode', 'whitelist')
     effective_global_auto_apply = bool(args.auto_apply or state.get('auto_apply', False))
+    afk_threshold = args.afk_threshold or int(state.get('afk_threshold', 0))
+    afk_mode = args.afk_mode or state.get('afk_mode', 'whitelist')
 
     # if running one check, honor effective preferences and exit
     if args.once:
+        # compute AFK status for a one-shot run
+        is_afk = False
+        if afk_threshold > 0:
+            try:
+                from samus_manus_mvp.memory import get_memory
+                rows = get_memory().all(200)
+                last_ts = 0
+                for r in rows:
+                    if r.get('type') in ('approval', 'action', 'task'):
+                        last_ts = max(last_ts, int(r.get('created_at') or 0))
+                import time as _time
+                if last_ts and (_time.time() - last_ts) >= afk_threshold * 60:
+                    is_afk = True
+            except Exception:
+                is_afk = False
+        if is_afk and afk_mode == 'global':
+            effective_global_auto_apply = True
         check_once(announce=args.announce, global_auto_apply=effective_global_auto_apply, mode=effective_mode)
         return
 
@@ -217,7 +388,28 @@ def main():
     print(f'Starting local heartbeat (interval={args.interval}s) — press Ctrl+C to stop')
     try:
         while True:
-            check_once(announce=args.announce, global_auto_apply=effective_global_auto_apply, mode=effective_mode)
+            # determine AFK status dynamically each loop (if configured)
+            is_afk = False
+            if afk_threshold > 0:
+                try:
+                    from samus_manus_mvp.memory import get_memory
+                    rows = get_memory().all(200)
+                    last_ts = 0
+                    for r in rows:
+                        if r.get('type') in ('approval', 'action', 'task'):
+                            last_ts = max(last_ts, int(r.get('created_at') or 0))
+                    if last_ts and (time.time() - last_ts) >= afk_threshold * 60:
+                        is_afk = True
+                except Exception:
+                    is_afk = False
+            # if AFK and mode=global, treat this run as global auto-apply
+            run_global_apply = effective_global_auto_apply or (is_afk and afk_mode == 'global')
+            if is_afk and args.announce:
+                try:
+                    speak(f'User idle for {afk_threshold} minutes — running pending tasks')
+                except Exception:
+                    pass
+            check_once(announce=args.announce, global_auto_apply=run_global_apply, mode=effective_mode)
             time.sleep(args.interval)
     except KeyboardInterrupt:
         print('\nHeartbeat stopped by user')

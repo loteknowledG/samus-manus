@@ -60,12 +60,27 @@ def restore_and_speak(rebuild_embeddings: bool = False, summary_limit: int = 5, 
     mem = None
     mem_count = 0
     recent = ''
+    persona_text = None
+    greeting_text = None
     try:
         if get_memory is not None:
             mem = get_memory()
             rows = mem.all(limit=summary_limit)
             mem_count = len(rows)
             recent = _summarize_mem_items(rows, limit=summary_limit)
+            # extract persona / greeting records if present
+            for r in rows:
+                rtype = r.get('type')
+                if rtype == 'persona' and r.get('text'):
+                    persona_text = r.get('text').strip()
+                if rtype == 'greeting' and r.get('text'):
+                    greeting_text = r.get('text').strip()
+                if persona_text and greeting_text:
+                    break
+            if persona_text:
+                parts.append(f'Assistant identity: {persona_text}')
+            if greeting_text:
+                parts.append(f'Greeting: {greeting_text}')
             parts.append(f'Memory loaded: {mem_count} records; recent: {recent}')
     except Exception:
         parts.append('Memory not available')
@@ -88,8 +103,13 @@ def restore_and_speak(rebuild_embeddings: bool = False, summary_limit: int = 5, 
     summary = ' — '.join(parts) if parts else 'No boot or memory information available.'
     short = textwrap.shorten(summary, width=320, placeholder='...')
 
-    # speak + print
+    # speak greeting (if present) then speak the summary + print
     if speak_summary:
+        if greeting_text:
+            try:
+                speak(greeting_text)
+            except Exception:
+                print('[speak failed] greeting:', greeting_text)
         try:
             speak(short)
         except Exception:

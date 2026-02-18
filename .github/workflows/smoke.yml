@@ -22,3 +22,22 @@ jobs:
           python -m pip install pytest
       - name: Run tests
         run: pytest -q
+
+      - name: Backup runtime state (smoke check)
+        run: |
+          python tools/backup_state.py backup
+          python -c "import glob,sys; files=sorted(glob.glob('backups/state-*.zip')); print(files[-1] if files else '')" > .last_backup
+          echo "Created backup: $(cat .last_backup)"
+
+      - name: Inspect backup
+        run: |
+          FILE=$(python -c "import glob;print(sorted(glob.glob('backups/state-*.zip'))[-1])")
+          echo "Inspecting $FILE"
+          python tools/backup_state.py inspect "$FILE"
+
+      - name: Restore backup (smoke)
+        run: |
+          FILE=$(python -c "import glob;print(sorted(glob.glob('backups/state-*.zip'))[-1])")
+          echo "Restoring $FILE"
+          python tools/backup_state.py restore "$FILE" --yes
+

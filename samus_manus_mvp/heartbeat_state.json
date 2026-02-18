@@ -1,7 +1,10 @@
 {
-  "last_heartbeat": 1771381432.7023537,
-  "last_task_check": 1771381432.7023537,
-  "heartbeat_pid": 25732,
+  "last_heartbeat": 1771390459.030411,
+  "last_task_check": 1771390459.030411,
   "auto_apply": true,
-  "auto_apply_mode": "whitelist"
+  "auto_apply_mode": "global",
+  "afk_threshold": 10,
+  "afk_mode": "whitelist",
+  "interval": 5,
+  "heartbeat_pid": 34940
 }

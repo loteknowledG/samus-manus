@@ -70,6 +70,27 @@ def cmd_backup(out: str):
     print('backup created:', out)
 
 
+def cmd_kg_query(q: str, top_k: int = 5, include_approvals: bool = True):
+    try:
+        from samus_manus_mvp.knowledge import retrieve, summarize_results
+    except Exception:
+        try:
+            from knowledge import retrieve, summarize_results
+        except Exception:
+            print('Knowledge module not available')
+            return
+    res = retrieve(q, top_k=top_k, include_approvals=include_approvals)
+    print(summarize_results(res))
+    if res.get('memory'):
+        print('\nMemory matches:')
+        for r in res['memory']:
+            print('-', r.get('type'), r.get('text')[:120])
+    if res.get('approvals'):
+        print('\nApproval matches:')
+        for a in res['approvals']:
+            print('-', a.get('ts'), a.get('answer') or a.get('approval'), '-', a.get('question') or a.get('task'))
+
+
 def main():
     ap = argparse.ArgumentParser(prog='memory', description='Memory CLI for Samus‑Manus')
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -113,6 +134,12 @@ def main():
 
     p = sub.add_parser('persona-show', help='Show the most recent persona')
     p.set_defaults(func=lambda a: cmd_list_persona())
+
+    p = sub.add_parser('kg-query', help='Query memory + approvals (knowledge)')
+    p.add_argument('q', help='Query text')
+    p.add_argument('--top-k', type=int, default=5)
+    p.add_argument('--no-approvals', dest='include_approvals', action='store_false', help='Do not search approval audit log')
+    p.set_defaults(func=lambda a: cmd_kg_query(a.q, a.top_k, a.include_approvals))
 
     args = ap.parse_args()
     args.func(args)

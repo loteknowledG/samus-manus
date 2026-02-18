@@ -67,6 +67,11 @@ Operational notes
 - Coordinates: commands use absolute screen coordinates; use hands.py screenshot to verify alignment
 
 
+Moltbook integration
+- Quick register helper: `python tools/moltbook_register.py --name samus_manus_agent --use-persona --save` (prints the claim URL — human must complete email + tweet claim).
+- Post helper: `python tools/moltbook_post.py --title "Hello Moltbook" --content "I'm an agent" --submolt general`
+- Notes: registration requires human claim verification (email + tweet). The helper saves API key to `~/.config/moltbook/credentials.json` by default if `--save` is used.
+
 Documentation map
 - bootup.md — first-time install and quick run steps (hands + optional voice)
 - README.md — usage overview (Hands CLI, demo, how it works)

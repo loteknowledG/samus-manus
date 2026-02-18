@@ -49,6 +49,7 @@ Notes: if Vosk not available, voice assistant falls back to typed input.
   - Stop background heartbeat: `python samus_manus_mvp/heartbeat.py --stop`
   - Auto‑apply pending tasks (background): `python samus_manus_mvp/heartbeat.py --background --auto-apply --announce`
   - Control auto‑apply mode: `--auto-apply-mode whitelist` (default) or `--auto-apply-mode global`
+  - AFK auto‑run: `--afk-threshold <minutes>` — when the user is idle for that many minutes the heartbeat can run pending tasks automatically. Use `--afk-mode whitelist` (default) or `--afk-mode global` to control which tasks are eligible.
 
 > The background heartbeat stores its PID in `heartbeat_state.json` under `heartbeat_pid` — use `--stop` or kill the PID to stop it.
 
@@ -78,6 +79,13 @@ Files saved by default: `heartbeat_state.json`, `tasks.json`, `memory.db`, `appr
 - Add more task templates to `tasks.json` for demos.
 - Add persistent logs and screenshots for audit trails.
 - (Optional) Add CI checks that validate `samus_agent` dry‑run behavior.
+
+### Recommended ClawHub skills (useful to install)
+- `Summarize` — CLI to summarize URLs, PDFs, images, audio and YouTube. Quick install: `brew install steipete/tap/summarize` or install via ClawHub; requires model API key (e.g. `OPENAI_API_KEY` or `GEMINI_API_KEY`).
+- `Tavily` — AI‑optimized web search skill (great for research). Requires `TAVILY_API_KEY` and review of SKILL.md before use.
+- `Slack` — Integrate with Slack (send/read/pin messages, react). Requires a Slack bot token; review security notes before installing.
+
+Tip: install skills with `npx clawhub@latest install <skill>` or download the skill ZIP from ClawHub for inspection before running.
 
 ## Copilot session snapshot (saved 2026-02-17) 💾
 - Core components confirmed present: `eyes.py`, `voice_loop.py`, `voice_assistant.py`, `heartbeat.py`, `samus_agent.py`, `memory.py`, `draw_smiley.py`, `tasks.json`, `heartbeat_state.json`, `requirements.txt`, `hands.py`.
